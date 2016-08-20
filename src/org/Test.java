@@ -1,6 +1,7 @@
 package org;
 
 import java.io.FileInputStream;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -25,16 +26,16 @@ public class Test {
 		Properties props = new Properties();
 
 		try {
-			Properties prop = new Properties();
+			/*Properties prop = new Properties();
 			String path = "./application.properties";
 			FileInputStream file = new FileInputStream(path);
 			prop.load(file);
-			file.close();
-
+			file.close();*/
+			Date date = new Date();
 			Session session = Session.getDefaultInstance(props, null);
 			Store store = session.getStore("imap");
 			store.connect("ttpds2dev.sitenv.org", 143,"hisp-testing@ttpds2dev.sitenv.org",
-					"******");
+					"hisptestingpass");
 
 			Folder inbox = store.getFolder("Inbox");
 			inbox.open(Folder.READ_WRITE);
@@ -65,7 +66,7 @@ public class Test {
 				message1.setFrom(new InternetAddress("failure15@ttpds.sitenv.org"));
 
 				Transport transport = session1.getTransport("smtp");
-				transport.connect("ttpds.sitenv.org", 25, "failure15@ttpds.sitenv.org", "****");
+				transport.connect("ttpds.sitenv.org", 25, "failure15@ttpds.sitenv.org", "smtptesting123");
 				transport.sendMessage(message1, message1.getAllRecipients());
 				transport.close();
 
@@ -73,13 +74,13 @@ public class Test {
 
 				inbox.setFlags(messages, new Flags(Flags.Flag.SEEN), true);
 
-				System.out.println("MDNs Sent!");
+				System.out.println(date.toString() + " MDNs Sent!");
 				
 
 			}
 
 			if (messages.length == 0){
-				System.out.println("No MDNs Found!");
+				System.out.println(date.toString() + " No MDNs Found!");
 			}
 
 		} catch (Exception e) {
