@@ -23,7 +23,7 @@ import javax.mail.util.ByteArrayDataSource;
 
 public class Utils {
 
-	public void sendMail(String host, String username, String password, String receipientAddr, InputStream is) throws Exception{
+	public void sendMail(String host, String username, String password, String receipientAddr, InputStream is, String filename) throws Exception{
 		Properties props = new Properties();
 		props.put("mail.smtp.auth", "true");
 		props.put("mail.smtp.auth.mechanisms", "PLAIN");
@@ -35,19 +35,21 @@ public class Utils {
 		message.setFrom(new InternetAddress(username));
 		message.setRecipients(Message.RecipientType.TO,
 				InternetAddress.parse(receipientAddr));
-		message.setSubject("Score Card Results");
+		message.setSubject("Scorecard Results for "+ filename);
 		message.setText("Score Card Results");
 		BodyPart messageBodyPart = new MimeBodyPart();
-		messageBodyPart.setText("This is message body");
 		Multipart multipart = new MimeMultipart();
-		DataSource source = new ByteArrayDataSource(is,
-				"application/pdf");
+		DataSource source = new ByteArrayDataSource(is,"application/pdf");
 		messageBodyPart.setDataHandler(new DataHandler(source));
 
-		messageBodyPart.setFileName("result.pdf");
+		messageBodyPart.setFileName(filename + "_ScorecardResults.pdf");
+		
 
 		multipart.addBodyPart(messageBodyPart);
-
+		
+		final MimeBodyPart textPart = new MimeBodyPart();
+        textPart.setContent("Thank you for submitting your C-CDA to the ONC C-CDA scorecard. Please find the attached summary of scoring results.", "text/plain"); 
+        multipart.addBodyPart(textPart);
 		// Send the complete message parts
 		message.setContent(multipart);
 		Transport transport = session.getTransport("smtp");
