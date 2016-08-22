@@ -99,7 +99,8 @@ public class ReadMail {
 
 						if (bodyPart.getFileName() != null) {
 							if ((bodyPart.getFileName().contains(".xml") || bodyPart.getFileName().contains(".XML"))){
-
+								String filename = bodyPart.getFileName();
+							//	String filename = fname.split(".")[0];
 								Logger.info("Found XML Attachment");
 								// Query Scorecard war endpoint
 								CloseableHttpClient client = HttpClients.createDefault();
@@ -127,7 +128,7 @@ public class ReadMail {
 							
 								
 								//Sending email with results
-								util.sendMail(prop.getProperty("host"),prop.getProperty("username"), prop.getProperty("password"),senderAddress,iss);
+								util.sendMail(prop.getProperty("host"),prop.getProperty("username"), prop.getProperty("password"),senderAddress,iss,filename);
 								Logger.info("Email with results sent to "+senderAddress);
 							}
 						}
