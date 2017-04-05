@@ -1,10 +1,10 @@
 package org;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.Properties;
 
@@ -30,9 +30,10 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import au.com.bytecode.opencsv.CSVWriter;
 
 
 /**
@@ -49,7 +50,9 @@ public class ReadMail {
 		String mId = null;
 
 		try {
-
+			
+		        
+			  
 			Utils util = new Utils();
 			//Reading properties file
 			Properties prop = new Properties();
@@ -62,10 +65,10 @@ public class ReadMail {
 			Properties props = new Properties();
 			Session session = Session.getInstance(props, null);
 
-			Store store = session.getStore("imap");
-			int port = Integer.parseInt(prop.getProperty("port"));
+			Store store = session.getStore("imaps");
+			int port = Integer.parseInt(prop.getProperty("imapport"));
 			Logger.info("Connecting to IMAP Inbox");
-			store.connect(prop.getProperty("host"),port,prop.getProperty("username"), prop.getProperty("password"));
+			store.connect(prop.getProperty("imaphost"),port,prop.getProperty("imapusername"), prop.getProperty("imappassword"));
 
 			Folder inbox = store.getFolder("Inbox");
 			inbox.open(Folder.READ_WRITE);
@@ -114,6 +117,7 @@ public class ReadMail {
 								MultipartEntityBuilder builder = MultipartEntityBuilder.create();
 								builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
 								builder.addPart("ccdaFile", fileBody);
+								builder.addTextBody("sender", senderAddress);
 								HttpEntity entity = builder.build();
 								post.setEntity(entity);
 
@@ -128,8 +132,28 @@ public class ReadMail {
 							
 								
 								//Sending email with results
-								util.sendMail(prop.getProperty("host"),prop.getProperty("username"), prop.getProperty("password"),senderAddress,iss,filename);
+								util.sendMail(prop.getProperty("smtphost"),prop.getProperty("smtpusername"), prop.getProperty("smtppassword"),senderAddress,iss,filename);
 								Logger.info("Email with results sent to "+senderAddress);
+								Logger.info("Logging Entries");
+								Date date = new Date();
+								String csv = "./logs.csv";
+								FileWriter pw = new FileWriter(csv, true);
+								CSVWriter writer = new CSVWriter(pw, ',', 
+									    CSVWriter.NO_QUOTE_CHARACTER, 
+									    CSVWriter.NO_ESCAPE_CHARACTER, 
+									    System.getProperty("line.separator"));
+								//Create record CSV
+							      String [] record = {senderAddress,filename,date.toString()};
+							      //Write the record to file CSV 
+							      writer.writeNext(record);
+							        
+							      //close the writer
+							      writer.close();
+							}
+							else{
+								
+							util.sendErrorMail(prop.getProperty("smtphost"),prop.getProperty("smtpusername"), prop.getProperty("smtppassword"),senderAddress);
+							Logger.info("Error Email Sent");
 							}
 						}
 						
@@ -141,8 +165,8 @@ public class ReadMail {
 
 			}
 			
-			util.deleteMail(prop.getProperty("host"),prop.getProperty("username"), prop.getProperty("password"));
-			
+			util.deleteMail(prop.getProperty("imaphost"),prop.getProperty("imapusername"), prop.getProperty("imappassword"));
+			Logger.info("Email Deleted");
 
 		}  catch (Exception e) {
 

@@ -27,7 +27,7 @@ public class Utils {
 		Properties props = new Properties();
 		props.put("mail.smtp.auth", "true");
 		props.put("mail.smtp.auth.mechanisms", "PLAIN");
-		props.setProperty("mail.smtp.ssl.trust", "*");
+		props.setProperty("mail.smtps.ssl.trust", "*");
 
 		Session session = Session.getInstance(props, null);
 
@@ -52,8 +52,8 @@ public class Utils {
         multipart.addBodyPart(textPart);
 		// Send the complete message parts
 		message.setContent(multipart);
-		Transport transport = session.getTransport("smtp");
-		transport.connect(host, 25, username, password);
+		Transport transport = session.getTransport("smtps");
+		transport.connect(host,username, password);
 		transport.sendMessage(message, message.getAllRecipients());
 		transport.close();
 	}
@@ -70,9 +70,9 @@ public class Utils {
 		
 		Session session = Session.getInstance(props, null);
 
-		Store store = session.getStore("imap");
-		int port = Integer.parseInt(prop.getProperty("port"));
-		store.connect(prop.getProperty("host"),port,prop.getProperty("username"), prop.getProperty("password"));
+		Store store = session.getStore("imaps");
+		int port = Integer.parseInt(prop.getProperty("imapport"));
+		store.connect(prop.getProperty("imaphost"),port,prop.getProperty("imapusername"), prop.getProperty("imappassword"));
 
 		Folder inbox = store.getFolder("Inbox");
 		inbox.open(Folder.READ_WRITE);
@@ -90,6 +90,27 @@ public class Utils {
 		
 		inbox.close(true);
 
+	}
+	
+	public void sendErrorMail(String host, String username, String password, String receipientAddr) throws Exception{
+		Properties props = new Properties();
+		props.put("mail.smtp.auth", "true");
+		props.put("mail.smtp.auth.mechanisms", "PLAIN");
+		props.setProperty("mail.smtps.ssl.trust", "*");
+
+		Session session = Session.getInstance(props, null);
+
+		Message message = new MimeMessage(session);
+		message.setFrom(new InternetAddress(username));
+		message.setRecipients(Message.RecipientType.TO,
+				InternetAddress.parse(receipientAddr));
+		message.setSubject("Scorecard Results");
+		message.setText("We are unable to process your message because the scorecard@direct.hhs.gov service can only process C-CDA attachments which are of mime-type application/xml. Your attachment does not conform to the expected format and hence processing cannot be completed. Please resend your C-CDA attachment in the right format for processing.");
+		
+		Transport transport = session.getTransport("smtps");
+		transport.connect(host,username, password);
+		transport.sendMessage(message, message.getAllRecipients());
+		transport.close();
 	}
 
 }
